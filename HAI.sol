@@ -19,37 +19,25 @@ contract HAIToken is BEP20('Goose Golden HAI', 'HAI') {
 
     mapping (address => address) internal _delegates;
 
-    /// @notice A checkpoint for marking number of votes from a given block
     struct Checkpoint {
         uint32 fromBlock;
         uint256 votes;
     }
 
-    /// @notice A record of votes checkpoints for each account, by index
     mapping (address => mapping (uint32 => Checkpoint)) public checkpoints;
 
-    /// @notice The number of checkpoints for each account
     mapping (address => uint32) public numCheckpoints;
 
-    /// @notice The EIP-712 typehash for the contract's domain
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
 
-    /// @notice The EIP-712 typehash for the delegation struct used by the contract
     bytes32 public constant DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
-    /// @notice A record of states for signing / validating signatures
     mapping (address => uint) public nonces;
 
-      /// @notice An event thats emitted when an account changes its delegate
     event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
 
-    /// @notice An event thats emitted when a delegate account's vote balance changes
     event DelegateVotesChanged(address indexed delegate, uint previousBalance, uint newBalance);
 
-    /**
-     * @notice Delegate votes from `msg.sender` to `delegatee`
-     * @param delegator The address to get delegatee for
-     */
     function delegates(address delegator)
         external
         view
@@ -58,23 +46,10 @@ contract HAIToken is BEP20('Goose Golden HAI', 'HAI') {
         return _delegates[delegator];
     }
 
-   /**
-    * @notice Delegate votes from `msg.sender` to `delegatee`
-    * @param delegatee The address to delegate votes to
-    */
     function delegate(address delegatee) external {
         return _delegate(msg.sender, delegatee);
     }
 
-    /**
-     * @notice Delegates votes from signatory to `delegatee`
-     * @param delegatee The address to delegate votes to
-     * @param nonce The contract state required to match the signature
-     * @param expiry The time at which to expire the signature
-     * @param v The recovery byte of the signature
-     * @param r Half of the ECDSA signature pair
-     * @param s Half of the ECDSA signature pair
-     */
     function delegateBySig(
         address delegatee,
         uint nonce,
@@ -118,11 +93,6 @@ contract HAIToken is BEP20('Goose Golden HAI', 'HAI') {
         return _delegate(signatory, delegatee);
     }
 
-    /**
-     * @notice Gets the current votes balance for `account`
-     * @param account The address to get votes balance
-     * @return The number of current votes for `account`
-     */
     function getCurrentVotes(address account)
         external
         view
@@ -132,13 +102,6 @@ contract HAIToken is BEP20('Goose Golden HAI', 'HAI') {
         return nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
     }
 
-    /**
-     * @notice Determine the prior number of votes for an account as of a block number
-     * @dev Block number must be a finalized block or else this function will revert to prevent misinformation.
-     * @param account The address of the account to check
-     * @param blockNumber The block number to get the vote balance at
-     * @return The number of votes the account had as of the given block
-     */
     function getPriorVotes(address account, uint blockNumber)
         external
         view
